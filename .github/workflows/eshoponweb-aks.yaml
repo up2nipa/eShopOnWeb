@@ -1,0 +1,29 @@
+name: Container Workflow
+on: workflow_dispatch
+
+env:
+  ACR_LOGIN_SERVER: aistraining.azurecr.io
+  TAG_NAME: eshoponweb-user002:1.0.0
+  IMAGE_NAME: ${{ vars.ACR_LOGIN_SERVER}}/${{vars.TAG_NAME}}
+
+jobs:
+  build-container:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout soure code
+        uses: actions/checkout@v7.0.0
+
+      - name: ACR Login
+        uses: docker/login-action@v4.4.0
+        with:
+          login-server: ${{ env.ACR_LOGIN_SERVER }}
+          username: ${{secrets.ACR_USERNAME}}
+          password: ${{secrets.ACR_PASSWORD}}
+
+        
+      - name: Bulid and Push Image
+        run: |
+          docker build . -t ${{ env.ACR_LOGIN_SERVER}}/${{env.TAG_NAME}}
+          docker push ${{ env.ACR_LOGIN_SERVER}}/${{env.TAG_NAME}}
+
+        
