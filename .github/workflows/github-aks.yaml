@@ -1,47 +1,54 @@
-name: Container Workflow2
+name: Container Workflow
 on: workflow_dispatch
 
 env:
   ACR_LOGIN_SERVER: aistraining.azurecr.io
   TAG_NAME: eshoponweb-user002:1.0.0
-  IMAGE_NAME: ${{ vars.ACR_LOGIN_SERVER}}/${{vars.TAG_NAME}}
-  RESOUCE-GROUP: ais-training
+  IMAGE_NAME: aistraining.azurecr.io/eshoponwebapp-user002:1.0.0
+  RESOURCE_GROUP: ais-training
   CLUSTER_NAME: aks-demo
 
 jobs:
   # build-container:
   #   runs-on: ubuntu-latest
+
   #   steps:
-  #     - name: Checkout soure code
+  #     - name: Checkput source code
   #       uses: actions/checkout@v7.0.0
 
   #     - name: ACR Login
-  #       uses: docker/login-action@v4.4.0
+  #       uses: azure/docker-login@v1
   #       with:
-  #         registry: ${{ env.ACR_LOGIN_SERVER }}
-  #         username: ${{secrets.ACR_USERNAME}}
-  #         password: ${{secrets.ACR_PASSWORD}}
+  #         login-vserver: ${{ env.ACR_LOGIN_SERVER }}
+  #         username: ${{ secrets.ACR_USERNAME }}
+  #         password: ${{ secrets.ACR_PASSWORD}}
 
-        
-  #     - name: Bulid and Push Image
+  #     - name: Build and Push Image
   #       run: |
-  #         docker build -f src/Web/Dockerfile -t ${{ env.ACR_LOGIN_SERVER}}/${{env.TAG_NAME}} .
-  #         docker push ${{ env.ACR_LOGIN_SERVER}}/${{env.TAG_NAME}}
-  depoly-to-aks:
+  #         docker build -f src/Web/Dockerfile -t ${{ env.ACR_LOGIN_SERVER }}/${{ env.TAG_NAME }} .
+  #         docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.TAG_NAME }}
+  deploy-to-aks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.0
       - uses: azure/aks-set-context@v1
         with:
-          creds: ${{secrets.AZURE_CREDENTINALS}}
-          resource-group: ${{env.RESOUCE-GROUP}}
-          cluster-name: ${{env.CLUSTER_NAME}}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          resource-group: ${{ env.RESOURCE_GROUP }}
+          cluster-name: ${{ env.CLUSTER_NAME }}
+
+      - uses: azure/k8s-create-secret@v1
+        with:
+          container-registry-url: ${{ env.ACR_LOGIN_SERVER }}
+          container-registry-name: aistraining
+          container-registry-username: ${{ secrets.ACR_USERNAME }}
+          container-registry-password: ${{ secrets.ACR_PASSWORD }}
+          secret-name: aks-secret
+
       - uses: azure/k8s-deploy@v1
         with:
           manifests: |
             .k8s/deployment.yaml
             .k8s/service.yaml
-          images: |
-            ${{ env.ACR_LOGIN_SERVER}}/${{env.TAG_NAME}}
-          
-        
+          images: ${{ env.IMAGE_NAME }}
+          imagepullsecrets: aks-secret    
