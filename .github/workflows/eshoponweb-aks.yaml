@@ -5,7 +5,7 @@ env:
   ACR_LOGIN_SERVER: aistraining.azurecr.io
   TAG_NAME: eshoponweb-user002:1.0.0
   IMAGE_NAME: ${{ vars.ACR_LOGIN_SERVER}}/${{vars.TAG_NAME}}
-  RESOUCE-GROUP: rg-002
+  RESOUCE_GROUP: ais-training
   CLUSTER_NAME: aks-demo
 
 jobs:
@@ -37,9 +37,9 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - uses: azure/aks-set-context@v1
         with:
-          creds: ${{secrets.AZURE_CREDENTINALS}}
-          resource-group: ${{env.RESOUCE-GROUP}}
-          cluster-name: ${{env.CLUSTER_NAME}}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          resource-group: ${{ env.RESOUCE_GROUP }}
+          cluster-name: ${{ env.CLUSTER_NAME }}
       - uses: azure/k8s-create-secret@v1
         with:
           container-registry-url: ${{ env.ACR_LOGIN_SERVER }}
